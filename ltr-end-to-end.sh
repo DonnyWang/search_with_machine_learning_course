@@ -43,7 +43,7 @@ shift $((OPTIND -1))
 # $SOURCE_DIR -- path to base of source code, eg. search_with_machine_learning/src/main/python
 # $WEEK -- what week to look into
 # $OUTPUT_DIR -- directory where to write output to
-# $ALL_CLICKS_FILE -- The set of all clicks
+# $ALL_CLICKS_FILE -- The set of all clicks, the row schema is  [user_id, sku, category, query, click_time, query_time]
 cd $SOURCE_DIR
 mkdir -p $OUTPUT_DIR
 echo "ltr-end-to-end.sh $SOURCE_DIR $WEEK $OUTPUT_DIR $ALL_CLICKS_FILE $SYNTHESIZE $CLICK_MODEL run at "  `date` > $OUTPUT_DIR/meta.txt
@@ -65,16 +65,19 @@ fi
 
 # Create our impressions (positive/negative) data set, e.g. all sessions (with LTR features added in already)
 echo "Creating impressions data set" # outputs to $OUTPUT_DIR/impressions.csv by default
+# --generate_impressions  --output_dir "/workspace/ltr_output" --train_file "/workspace/ltr_output/train.csv" --synthesize
 python $WEEK/utilities/build_ltr.py --generate_impressions  --output_dir "$OUTPUT_DIR" --train_file "$OUTPUT_DIR/train.csv" $SYNTHESIZE
 if [ $? -ne 0 ] ; then
   exit 2
 fi
 # Create the actual training set from the impressions set
+#  --ltr_terms_field sku --output_dir "/workspace/ltr_output" --create_xgb_training -f week1/conf/ltr_featureset.json --click_model heuristic
 python $WEEK/utilities/build_ltr.py --ltr_terms_field sku --output_dir "$OUTPUT_DIR" --create_xgb_training -f $WEEK/conf/ltr_featureset.json --click_model $CLICK_MODEL $DOWNSAMPLE
 if [ $? -ne 0 ] ; then
   exit 2
 fi
 # Given a training set in SVMRank format, train an XGB model
+# --output_dir /workspace/ltr_output -x "/workspace/ltr_output/training.xgb" --xgb_conf "/workspace/search_with_machine_learning_course/week1/conf/xgb-conf.json"
 python $WEEK/utilities/build_ltr.py  --output_dir "$OUTPUT_DIR" -x "$OUTPUT_DIR/training.xgb" --xgb_conf $WEEK/conf/xgb-conf.json
 if [ $? -ne 0 ] ; then
   exit 2

@@ -85,14 +85,22 @@ To run locally, you will need a few things:
 
 Note: these have only been tested on a Mac running OS 12.2.1.  YMMV.  Much of what you will need to do will be similar to what's in `.gitpod.Dockerfile`
 
-1.  Install [GraphViz](https://www.graphviz.org/)
-1. `pyenv install 3.9.7`
-1. `pip install` all of the libraries you see in `.gitpod.Dockerfile`
-1. Setup your weekly python environments per the "Weekly Project" above.
-1. Install [Fasttext](https://fasttext.cc/)  
-1. Run OpenSearch: 
+1. Install [GraphViz](https://www.graphviz.org/)
+2. `pyenv install 3.9.7`
+3. `pip install` all of the libraries you see in `.gitpod.Dockerfile`
+4. Setup your weekly python environments per the "Weekly Project" above.
+5. Install [Fasttext](https://fasttext.cc/)  
+6. Run OpenSearch: 
     1. `cd docker`
     1. `docker-compose up`
-1. Note: most of the scripts and projects assume the data is in `/workspace/datasets`, but have overrides to specify your own directories. You will need to download and plan accordingly.  
-1. Do your work per the Weekly Project     
+7. Note: most of the scripts and projects assume the data is in `/workspace/datasets`, but have overrides to specify your own directories. You will need to download and plan accordingly.  
+8. Do your work per the Weekly Project     
+
+
+## Index single index
+python index_products.py --reduced -s "/workspace/datasets/product_data/products" > "/workspace/logs/index_products.log"
+
+python index_queries.py -s "/workspace/datasets/train.csv" > "/workspace/logs/index_queries.log"
+
+  
     
