@@ -232,7 +232,12 @@ class DataPrepper:
                                                 size=len(query_doc_ids), terms_field=terms_field)
         ##### Step Extract LTR Logged Features:
         # IMPLEMENT_START --
-        print("IMPLEMENT ME: __log_ltr_query_features: Extract log features out of the LTR:EXT response and place in a data frame")
+        print("handling query " + key)
+        # Run the query just like any other search
+        response = self.opensearch.search(body=log_query, index=self.index_name)
+
+        #print("IMPLEMENT ME: __log_ltr_query_features: Extract log features out of the LTR:EXT response and place in a data frame")
+
         # Loop over the hits structure returned by running `log_query` and then extract out the features from the response per query_id and doc id.  Also capture and return all query/doc pairs that didn't return features
         # Your structure should look like the data frame below
         feature_results = {}
@@ -240,12 +245,28 @@ class DataPrepper:
         feature_results["query_id"] = []  # ^^^
         feature_results["sku"] = []
         feature_results["name_match"] = []
-        rng = np.random.default_rng(12345)
+
+        doc_id_features = {}
+        feature_name_values = {}
+        if response and len(response['hits']) > 0 and len(response['hits']['hits']) > 0:
+            hits = response['hits']['hits']
+            for hit in hits:
+                name_values = hit['fields']['_ltrlog'][0]['log_entry']
+                for name_value in name_values:
+                    feature_name_values[name_value["name"]] = float(name_value.get("value", 0.0))
+
+                doc_id_features[int(hit["_id"])] = feature_name_values
+
         for doc_id in query_doc_ids:
             feature_results["doc_id"].append(doc_id)  # capture the doc id so we can join later
             feature_results["query_id"].append(query_id)
-            feature_results["sku"].append(doc_id)  
-            feature_results["name_match"].append(rng.random())
+            feature_results["sku"].append(doc_id)
+            if doc_id in doc_id_features.keys():
+                ltr_feature_values = doc_id_features.get(doc_id)
+                feature_results["name_match"].append(ltr_feature_values.get("name_match", float(0)))
+            else:
+                feature_results["name_match"].append(float(0))
+
         frame = pd.DataFrame(feature_results)
         return frame.astype({'doc_id': 'int64', 'query_id': 'int64', 'sku': 'int64'})
         # IMPLEMENT_END
